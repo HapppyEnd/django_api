@@ -110,6 +110,8 @@
 - [Swagger UI](http://localhost:8000/docs/)
 - [ReDoc](http://localhost:8000/redoc/)
 
+
+API доступен по следующему адресу: [https://www.happpyend.ru/api/](https://www.happpyend.ru/api/).
 ## Лицензия
 
 Этот проект лицензирован под MIT License. См. файл [LICENSE](LICENSE) для получения подробной информации.
