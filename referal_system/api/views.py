@@ -1,15 +1,26 @@
 import string
 from random import choice, randint
 
+from api.permissions import IsAdminOrIsSelf
+from api.serializers import AuthSerializer, ReferralSerializer
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from api.permissions import IsAdminOrIsSelf
-from api.serializers import AuthSerializer, ReferralSerializer
 from users.models import User
+
+REFERENCE_CODE = 'reference_code'
+ME = 'me'
+EMPTY = 'Empty'
+NOT_FOUND = 'Not Found'
+ALREADY_USED = 'Already Used'
+YOURSELF_CODE = 'Can not use your invite code.'
+VERIFIED_CODE = 'verified_code'
+PHONE_NUMBER = 'phone_number'
+REFRESH = 'refresh'
+ACCESS = 'access'
+INVITE_CODE_LENGHT = 6
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -17,34 +28,34 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ReferralSerializer
 
     @action(detail=False, methods=['get', 'patch'],
-            permission_classes=[IsAdminOrIsSelf], url_path='me')
+            permission_classes=[IsAdminOrIsSelf], url_path=ME)
     def get_profile_or_add_referral(self, request):
         user = User.objects.get(pk=request.user.pk)
         if request.method == 'GET':
             return Response(
                 ReferralSerializer(user).data,
                 status=status.HTTP_200_OK)
-        reference_code = request.data.get('reference_code')
+        reference_code = request.data.get(REFERENCE_CODE)
         if not reference_code:
-            return Response({'reference_code': 'Empty'},
+            return Response({REFERENCE_CODE: EMPTY},
                             status=status.HTTP_400_BAD_REQUEST)
 
         if not User.objects.filter(invite_code=reference_code).exists():
-            return Response({'reference_code': 'Not found'},
+            return Response({REFERENCE_CODE: NOT_FOUND},
                             status=status.HTTP_404_NOT_FOUND)
 
         if user.reference_code:
-            return Response({'reference_code': 'Already used'},
+            return Response({REFERENCE_CODE: ALREADY_USED},
                             status=status.HTTP_400_BAD_REQUEST)
 
         if reference_code == user.invite_code:
             return Response(
-                {'reference_code': 'Can not use your invite code.'},
+                {REFERENCE_CODE: YOURSELF_CODE},
                 status=status.HTTP_400_BAD_REQUEST)
 
         user.reference_code = reference_code
         user.save()
-        return Response({'reference_code': reference_code},
+        return Response({REFERENCE_CODE: reference_code},
                         status=status.HTTP_200_OK)
 
 
@@ -55,13 +66,14 @@ class AuthViewSet(viewsets.ModelViewSet):
     def get_invite_code(cls):
         characters = string.ascii_letters + string.digits
         while True:
-            invite_code = ''.join(choice(characters) for _ in range(6))
+            invite_code = ''.join(
+                choice(characters) for _ in range(INVITE_CODE_LENGHT))
             if not User.objects.filter(invite_code=invite_code).exists():
                 return invite_code
 
     def create(self, request, *args, **kwargs):
-        phone_number = request.data.get('phone_number')
-        verified_code = request.data.get('verified_code')
+        phone_number = request.data.get(PHONE_NUMBER)
+        verified_code = request.data.get(VERIFIED_CODE)
         user, _ = User.objects.get_or_create(phone_number=phone_number)
 
         if verified_code:
@@ -71,8 +83,8 @@ class AuthViewSet(viewsets.ModelViewSet):
                 user.verified_code = None
                 user.save()
                 refresh = RefreshToken.for_user(user)
-                return Response({'refresh': str(refresh),
-                                 'access': str(refresh.access_token)},
+                return Response({REFRESH: str(refresh),
+                                 ACCESS: str(refresh.access_token)},
                                 status=status.HTTP_200_OK)
 
         verify_code = randint(1000, 9999)
