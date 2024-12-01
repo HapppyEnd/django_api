@@ -1,0 +1,31 @@
+volumes:
+  static:
+  media:
+  pg_data:
+
+services:
+  db:
+    image: postgres:13
+    env_file: ../.env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+
+  backend:
+    depends_on:
+      - db
+    env_file: ../.env
+    image: happpyend/referral_backend
+    volumes:
+      - static:/app/backend_static
+      - media:/app/media
+  nginx:
+    image: nginx:1.19.3
+    depends_on:
+      - backend
+    ports:
+      - "9000:80"
+    volumes:
+      - static:/static/
+      - media:/media/
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf

@@ -1,7 +1,7 @@
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import BaseUserManager
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, phone_number, password=None, **extra_fields):
@@ -23,6 +23,7 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(phone_number, password, **extra_fields)
 
+
 class User(AbstractUser):
     phone_number = PhoneNumberField(unique=True)
     verified_code = models.CharField(blank=True, null=True, max_length=6)
@@ -33,6 +34,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
+
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
@@ -40,5 +42,3 @@ class User(AbstractUser):
 
     def __str__(self):
         return str(self.phone_number)
-
-
