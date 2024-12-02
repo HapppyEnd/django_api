@@ -3,7 +3,8 @@ import time
 from random import choice, randint
 
 from api.permissions import IsAdminOrIsSelf
-from api.serializers import AuthSerializer, ReferralSerializer
+from api.serializers import (AuthSerializer, PhoneNumberSerializer,
+                             ReferralSerializer)
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -120,6 +121,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 class AuthViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny, ]
     http_method_names = ['post', ]
+    serializer_class = PhoneNumberSerializer
 
     @classmethod
     def get_invite_code(cls):
@@ -153,7 +155,10 @@ class AuthViewSet(viewsets.ModelViewSet):
         }
     )
     def create(self, request):
-        phone_number = request.data.get(PHONE_NUMBER)
+        serializer = PhoneNumberSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+        phone_number = serializer.data[PHONE_NUMBER]
         verified_code = request.data.get(VERIFIED_CODE)
         user, _ = User.objects.get_or_create(phone_number=phone_number)
 

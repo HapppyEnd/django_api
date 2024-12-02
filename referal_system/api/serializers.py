@@ -1,6 +1,14 @@
+from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
-
 from users.models import User
+
+
+class PhoneNumberSerializer(serializers.Serializer):
+    phone_number = PhoneNumberField(region='RU')
+
+    class Meta:
+        model = User
+        fields = ('phone_number',)
 
 
 class UserReferenceSerializer(serializers.ModelSerializer):

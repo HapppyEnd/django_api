@@ -25,7 +25,7 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    phone_number = PhoneNumberField(unique=True)
+    phone_number = PhoneNumberField(unique=True, blank=False, null=False)
     verified_code = models.CharField(blank=True, null=True, max_length=6)
     invite_code = models.CharField(max_length=6, blank=True)
     reference_code = models.CharField(max_length=6, blank=True)
